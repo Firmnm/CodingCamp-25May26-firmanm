@@ -1,0 +1,725 @@
+/* css/styles.css — Expense & Budget Visualizer */
+/* Styles implemented in Task 2 */
+
+/* ============================================================
+   1. CSS CUSTOM PROPERTIES — LIGHT MODE (default)
+   ============================================================ */
+:root {
+  /* Backgrounds */
+  --color-bg: #f0f2f5;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8f9fa;
+
+  /* Text */
+  --color-text: #1a1a2e;
+  --color-text-muted: #6c757d;
+  --color-text-inverse: #ffffff;
+
+  /* Accent / interactive */
+  --color-accent: #4a90e2;
+  --color-accent-hover: #357abd;
+  --color-accent-focus: rgba(74, 144, 226, 0.35);
+
+  /* Semantic */
+  --color-danger: #e74c3c;
+  --color-danger-hover: #c0392b;
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+
+  /* Over-limit highlight */
+  --color-over-limit: #fff3cd;
+  --color-over-limit-border: #f39c12;
+  --color-over-limit-text: #856404;
+
+  /* Borders & shadows */
+  --color-border: #dee2e6;
+  --color-border-focus: #4a90e2;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+
+  /* Toast */
+  --color-toast-warning-bg: #fff3cd;
+  --color-toast-warning-border: #f39c12;
+  --color-toast-warning-text: #856404;
+  --color-toast-error-bg: #f8d7da;
+  --color-toast-error-border: #e74c3c;
+  --color-toast-error-text: #721c24;
+
+  /* Spacing & sizing */
+  --radius: 8px;
+  --radius-sm: 4px;
+  --transition-theme: color 150ms ease, background-color 150ms ease,
+    border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* ============================================================
+   2. CSS CUSTOM PROPERTIES — DARK MODE OVERRIDES
+   ============================================================ */
+[data-theme="dark"] {
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface-alt: #0f3460;
+
+  --color-text: #e0e0e0;
+  --color-text-muted: #9e9e9e;
+  --color-text-inverse: #1a1a2e;
+
+  --color-accent: #5ba3f5;
+  --color-accent-hover: #4a90e2;
+  --color-accent-focus: rgba(91, 163, 245, 0.35);
+
+  --color-danger: #ff6b6b;
+  --color-danger-hover: #e74c3c;
+  --color-success: #51cf66;
+  --color-warning: #fcc419;
+
+  --color-over-limit: #3d2c00;
+  --color-over-limit-border: #fcc419;
+  --color-over-limit-text: #fcc419;
+
+  --color-border: #2d3748;
+  --color-border-focus: #5ba3f5;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.40);
+
+  --color-toast-warning-bg: #3d2c00;
+  --color-toast-warning-border: #fcc419;
+  --color-toast-warning-text: #fcc419;
+  --color-toast-error-bg: #3d0000;
+  --color-toast-error-border: #ff6b6b;
+  --color-toast-error-text: #ff6b6b;
+}
+
+/* ============================================================
+   3. RESET & BASE
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  transition: var(--transition-theme);
+}
+
+/* ============================================================
+   4. HEADER
+   ============================================================ */
+header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: var(--transition-theme);
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.balance-label {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+#balance-amount {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   5. MAIN LAYOUT
+   ============================================================ */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "form    filter"
+    "chart   list"
+    "limit   limit";
+  gap: 1.25rem;
+}
+
+/* ============================================================
+   6. SECTION BASE STYLES
+   ============================================================ */
+main > section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-theme);
+}
+
+main > section h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 0.4rem;
+}
+
+.section-description {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+/* Grid area assignments */
+#form-section        { grid-area: form; }
+#filter-section      { grid-area: filter; }
+#chart-section       { grid-area: chart; }
+#list-section        { grid-area: list; }
+#spending-limit-section { grid-area: limit; }
+
+/* ============================================================
+   7. FORM SECTION
+   ============================================================ */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.85rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease,
+    background-color 150ms ease;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-focus);
+}
+
+.form-group input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Field-level validation errors */
+.field-error {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  min-height: 1.1em;
+  display: block;
+}
+
+/* Custom category sub-form */
+.custom-category-form {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.custom-category-form h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   8. BUTTONS
+   ============================================================ */
+button[type="submit"],
+button[type="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, box-shadow 150ms ease,
+    transform 80ms ease;
+  white-space: nowrap;
+}
+
+button[type="submit"]:focus-visible,
+button[type="button"]:focus-visible {
+  outline: 3px solid var(--color-accent-focus);
+  outline-offset: 2px;
+}
+
+button[type="submit"]:active,
+button[type="button"]:active {
+  transform: translateY(1px);
+}
+
+/* Primary submit buttons */
+#btn-add-transaction,
+#btn-add-category {
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+#btn-add-transaction:hover,
+#btn-add-category:hover {
+  background-color: var(--color-accent-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Clear filter button */
+#btn-clear-filter {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+#btn-clear-filter:hover {
+  background-color: var(--color-border);
+}
+
+/* Theme toggle button */
+#theme-toggle {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+#theme-toggle:hover {
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent);
+}
+
+/* ============================================================
+   9. FILTER SECTION
+   ============================================================ */
+.filter-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filter-controls .form-group {
+  flex: 1;
+  min-width: 120px;
+  margin-bottom: 0;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sort-controls label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.sort-controls select {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.sort-controls select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-focus);
+}
+
+/* ============================================================
+   10. CHART SECTION
+   ============================================================ */
+.chart-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+#spending-chart {
+  max-width: 100%;
+  max-height: 280px;
+}
+
+.placeholder-text {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+/* ============================================================
+   11. TRANSACTION LIST SECTION
+   ============================================================ */
+#list-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable transaction list — Req 2.4 */
+#transaction-list {
+  list-style: none;
+  overflow-y: auto;
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.25rem; /* room for scrollbar */
+}
+
+/* Scrollbar styling (webkit) */
+#transaction-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#transaction-list::-webkit-scrollbar-track {
+  background: var(--color-surface-alt);
+  border-radius: 3px;
+}
+
+#transaction-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+#transaction-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Individual transaction item */
+.transaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-theme);
+}
+
+.transaction-item:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.transaction-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transaction-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.transaction-amount {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.transaction-delete {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.transaction-delete:hover {
+  color: var(--color-danger);
+  background-color: var(--color-toast-error-bg);
+  border-color: var(--color-danger);
+}
+
+.transaction-delete:focus-visible {
+  outline: 3px solid var(--color-accent-focus);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   12. OVER-LIMIT HIGHLIGHT — Req 10.4
+   ============================================================ */
+.over-limit {
+  background-color: var(--color-over-limit) !important;
+  border-color: var(--color-over-limit-border) !important;
+  outline: 2px solid var(--color-over-limit-border);
+  outline-offset: -1px;
+}
+
+.over-limit .transaction-name,
+.over-limit .transaction-meta {
+  color: var(--color-over-limit-text);
+}
+
+.over-limit .transaction-amount {
+  color: var(--color-over-limit-text);
+}
+
+/* ============================================================
+   13. SPENDING LIMIT SECTION
+   ============================================================ */
+#spending-limit-section {
+  grid-column: 1 / -1;
+}
+
+#spending-limit-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Each per-category limit row rendered by app.js */
+.limit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.limit-row label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.limit-row input {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  width: 100%;
+}
+
+.limit-row input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-focus);
+}
+
+/* ============================================================
+   14. TOAST NOTIFICATIONS
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 360px;
+  width: calc(100% - 2.5rem);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border-left: 4px solid;
+  box-shadow: var(--shadow-md);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  pointer-events: all;
+  animation: toast-in 200ms ease forwards;
+}
+
+.toast.toast-warning {
+  background-color: var(--color-toast-warning-bg);
+  border-color: var(--color-toast-warning-border);
+  color: var(--color-toast-warning-text);
+}
+
+.toast.toast-error {
+  background-color: var(--color-toast-error-bg);
+  border-color: var(--color-toast-error-border);
+  color: var(--color-toast-error-text);
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  color: inherit;
+  opacity: 0.7;
+  flex-shrink: 0;
+  transition: opacity 150ms ease;
+}
+
+.toast-dismiss:hover {
+  opacity: 1;
+}
+
+.toast-dismiss:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   15. RESPONSIVE — SINGLE COLUMN ON NARROW SCREENS
+   ============================================================ */
+@media (max-width: 700px) {
+  main {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "form"
+      "filter"
+      "chart"
+      "list"
+      "limit";
+    padding: 1rem;
+  }
+
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  #transaction-list {
+    max-height: 260px;
+  }
+
+  #toast-container {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+  }
+}
