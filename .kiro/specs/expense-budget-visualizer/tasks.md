@@ -58,14 +58,14 @@ This plan implements the Expense & Budget Visualizer — a fully client-side sin
   - Implement `loadFromStorage()`: read and deserialize all four keys; validate each transaction entry has required fields and a finite positive `amount`; on parse failure or schema failure discard the key and call `showToast`; merge persisted custom categories with hardcoded defaults
   - **Acceptance criteria**: Req 6.1–6.5, Req 11.3–11.5
 
-- [ ] 4. Validation functions
+- [x] 4. Validation functions
   - Implement `validateAmount(value)`: returns error string if value is non-numeric, ≤ 0, or > 999,999,999.99; returns null on success
   - Implement `validateCategoryLabel(label, existingCategories)`: returns error string if label is empty, whitespace-only, > 100 characters, or matches any existing category case-insensitively; returns null on success
   - Implement `validateSpendingLimit(value)`: returns error string if value is non-numeric or ≤ 0; returns null on success
   - Implement `validateTransaction(name, amount, category, date)`: aggregates field-level errors; returns null if all valid
   - **Acceptance criteria**: Req 1.3, 1.4, 7.1, 7.4, 10.1, 10.2
 
-- [ ] 5. State mutation functions
+- [x] 5. State mutation functions
   - Implement `addTransaction(name, amount, category, date)`: generate UUID via `crypto.randomUUID()`, append to `AppState.transactions`, call `saveToStorage()`, call `render()`
   - Implement `deleteTransaction(id)`: remove from `AppState.transactions`, call `saveToStorage()` (if it throws, restore the transaction and do not re-render), call `render()`
   - Implement `addCustomCategory(label)`: append to `AppState.categories`, call `saveToStorage()`, call `render()`
@@ -76,7 +76,7 @@ This plan implements the Expense & Budget Visualizer — a fully client-side sin
   - Implement `setSort(sortKey)`: set `AppState.sort`, call `render()`
   - **Acceptance criteria**: Req 1.2, 1.5, 1.6, 3.3, 7.2, 7.3, 8.4, 9.4, 10.3, 10.8, 11.3
 
-- [ ] 6. Derived computation functions
+- [x] 6. Derived computation functions
   - Implement `getFilteredTransactions()`: if `AppState.filter` is null return all transactions; otherwise return only those whose `date` falls in the selected year and month
   - Implement `getSortedTransactions(txns)`: sort by `AppState.sort` key (`amount-asc`, `amount-desc`, `category-asc`); default is reverse insertion order; use a stable sort (preserve original array index for equal values)
   - Implement `computeBalance(txns)`: sum all `amount` values and round to 2 decimal places using `Math.round(sum * 100) / 100`
