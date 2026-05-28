@@ -39,20 +39,58 @@ const STORAGE_KEYS = {
 };
 
 // =============================================================================
-// SECTION 8 (STUB): TOAST NOTIFICATIONS
-// Full implementation in Task 8. Stub prevents ReferenceErrors in Tasks 3–7.
+// SECTION 8: TOAST NOTIFICATIONS
+// Req 6.1, 6.4, 7.3, 10.3, 11.3
 // =============================================================================
 
 /**
- * Show a non-blocking toast notification.
- * Stub — full implementation provided in Task 8.
+ * Show a non-blocking toast notification in #toast-container.
+ * Creates a dismissible toast element that auto-removes after autoDismissMs.
+ * Multiple toasts stack vertically; each is independent.
  * @param {string} message
  * @param {'warning'|'error'} [type='warning']
  * @param {number} [autoDismissMs=5000]
  */
 function showToast(message, type = 'warning', autoDismissMs = 5000) {
-  // Stub: log to console until Task 8 implements the real toast UI.
-  console.warn(`[Toast][${type}] ${message}`);
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  // Build the toast element
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  // Message text node wrapped in a span for flex layout
+  const messageSpan = document.createElement('span');
+  messageSpan.className = 'toast-message';
+  messageSpan.textContent = message;
+
+  // Dismiss button
+  const dismissBtn = document.createElement('button');
+  dismissBtn.type = 'button';
+  dismissBtn.className = 'toast-dismiss';
+  dismissBtn.setAttribute('aria-label', 'Dismiss');
+  dismissBtn.textContent = '✕';
+
+  toast.appendChild(messageSpan);
+  toast.appendChild(dismissBtn);
+
+  // Append to container — CSS flex-column handles stacking
+  container.appendChild(toast);
+
+  // Auto-remove after autoDismissMs
+  const timerId = setTimeout(() => {
+    if (toast.parentNode) {
+      toast.parentNode.removeChild(toast);
+    }
+  }, autoDismissMs);
+
+  // Manual dismiss: clear the timer and remove immediately
+  dismissBtn.addEventListener('click', () => {
+    clearTimeout(timerId);
+    if (toast.parentNode) {
+      toast.parentNode.removeChild(toast);
+    }
+  });
 }
 
 // =============================================================================
@@ -1051,3 +1089,205 @@ function isOverLimit(category, txns) {
 
   return categoryTotal >= limit;
 }
+
+// =============================================================================
+// SECTION 7: EVENT HANDLERS AND INITIALIZATION
+// Req 1.2, 1.3, 1.4, 1.5, 1.6, 3.1, 3.2, 3.3, 7.1, 7.2, 7.4, 8.1, 8.4,
+//     9.1, 9.2, 10.1, 10.2, 10.8, 11.1
+// =============================================================================
+
+/**
+ * Register all event listeners for the application.
+ * Called once by init() after the DOM is ready.
+ */
+function registerEventListeners() {
+  // -------------------------------------------------------------------------
+  // a. Transaction form submit
+  // -------------------------------------------------------------------------
+  const transactionForm = document.getElementById('transaction-form');
+  if (transactionForm) {
+    transactionForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const name     = document.getElementById('input-name').value;
+      const amount   = document.getElementById('input-amount').value;
+      const category = document.getElementById('input-category').value;
+      const date     = document.getElementById('input-date').value;
+
+      const errors = validateTransaction(name, amount, category, date);
+
+      // Field-level error spans
+      const errorName     = document.getElementById('error-name');
+      const errorAmount   = document.getElementById('error-amount');
+      const errorCategory = document.getElementById('error-category');
+      const errorDate     = document.getElementById('error-date');
+
+      if (errors !== null) {
+        // Display errors for invalid fields; clear errors for valid fields
+        if (errorName)     errorName.textContent     = errors.name     || '';
+        if (errorAmount)   errorAmount.textContent   = errors.amount   || '';
+        if (errorCategory) errorCategory.textContent = errors.category || '';
+        if (errorDate)     errorDate.textContent     = errors.date     || '';
+        return;
+      }
+
+      // Clear all error spans on success
+      if (errorName)     errorName.textContent     = '';
+      if (errorAmount)   errorAmount.textContent   = '';
+      if (errorCategory) errorCategory.textContent = '';
+      if (errorDate)     errorDate.textContent     = '';
+
+      addTransaction(name, amount, category, date);
+
+      // Reset the form fields
+      document.getElementById('input-name').value    = '';
+      document.getElementById('input-amount').value  = '';
+      const categorySelect = document.getElementById('input-category');
+      if (categorySelect) categorySelect.selectedIndex = 0;
+      document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // b. Delete button clicks — event delegation on #transaction-list
+  // -------------------------------------------------------------------------
+  const transactionList = document.getElementById('transaction-list');
+  if (transactionList) {
+    transactionList.addEventListener('click', (event) => {
+      const deleteBtn = event.target.closest('.transaction-delete');
+      if (!deleteBtn) return;
+
+      const id = deleteBtn.dataset.id;
+      if (window.confirm('Delete this transaction?')) {
+        deleteTransaction(id);
+      }
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // c. Custom category form submit
+  // -------------------------------------------------------------------------
+  const customCategoryForm = document.getElementById('custom-category-form');
+  if (customCategoryForm) {
+    customCategoryForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const label = document.getElementById('input-custom-category').value;
+      const errorCustomCategory = document.getElementById('error-custom-category');
+
+      const error = validateCategoryLabel(label, AppState.categories);
+
+      if (error !== null) {
+        if (errorCustomCategory) errorCustomCategory.textContent = error;
+        return;
+      }
+
+      if (errorCustomCategory) errorCustomCategory.textContent = '';
+      addCustomCategory(label);
+      document.getElementById('input-custom-category').value = '';
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // d. Spending limit input changes — event delegation on #spending-limit-form
+  // -------------------------------------------------------------------------
+  const spendingLimitForm = document.getElementById('spending-limit-form');
+  if (spendingLimitForm) {
+    spendingLimitForm.addEventListener('change', (event) => {
+      const input = event.target.closest('input[data-category]');
+      if (!input) return;
+
+      const category = input.dataset.category;
+      const value    = input.value;
+      const errorSpendingLimit = document.getElementById('error-spending-limit');
+
+      if (value === '') {
+        // Empty value — remove the spending limit for this category
+        removeSpendingLimit(category);
+        if (errorSpendingLimit) errorSpendingLimit.textContent = '';
+      } else {
+        const error = validateSpendingLimit(value);
+        if (error !== null) {
+          if (errorSpendingLimit) errorSpendingLimit.textContent = error;
+        } else {
+          if (errorSpendingLimit) errorSpendingLimit.textContent = '';
+          setSpendingLimit(category, Number(value));
+        }
+      }
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // e. Theme toggle click
+  // -------------------------------------------------------------------------
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      setTheme(AppState.theme === 'light' ? 'dark' : 'light');
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // f. Month/year filter changes
+  // -------------------------------------------------------------------------
+  const filterMonth = document.getElementById('filter-month');
+  const filterYear  = document.getElementById('filter-year');
+
+  function applyFilter() {
+    const month = filterMonth ? filterMonth.value : '';
+    const year  = filterYear  ? filterYear.value  : '';
+
+    if (month !== '' && year !== '') {
+      setFilter(Number(year), Number(month));
+    } else {
+      clearFilter();
+    }
+  }
+
+  if (filterMonth) filterMonth.addEventListener('change', applyFilter);
+  if (filterYear)  filterYear.addEventListener('change', applyFilter);
+
+  // -------------------------------------------------------------------------
+  // g. Clear filter button
+  // -------------------------------------------------------------------------
+  const btnClearFilter = document.getElementById('btn-clear-filter');
+  if (btnClearFilter) {
+    btnClearFilter.addEventListener('click', () => {
+      if (filterMonth) filterMonth.value = '';
+      if (filterYear)  filterYear.value  = '';
+      clearFilter();
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // h. Sort control change
+  // -------------------------------------------------------------------------
+  const sortSelect = document.getElementById('sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (event) => {
+      setSort(event.target.value);
+    });
+  }
+}
+
+/**
+ * Application entry point.
+ * Loads persisted state, sets the default date, registers all event listeners,
+ * and performs the initial render.
+ * Req 1.2, 8.1, 11.1
+ */
+function init() {
+  loadFromStorage();
+
+  // Set the date input default to today
+  const dateInput = document.getElementById('input-date');
+  if (dateInput) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  registerEventListeners();
+  render();
+}
+
+// Kick off the application once the DOM is fully parsed
+document.addEventListener('DOMContentLoaded', init);
