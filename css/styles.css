@@ -180,19 +180,33 @@ main {
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "form    filter"
-    "chart   list"
-    "limit   limit";
+  display: flex;
+  align-items: stretch;
   gap: 1.25rem;
 }
+
+.left-col,
+.right-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+#filter-section { flex: 1; }
+
+#list-section {
+  display: flex;
+  flex-direction: column;
+}
+
 
 /* ============================================================
    6. SECTION BASE STYLES
    ============================================================ */
-main > section {
+.left-col > section,
+.right-col > section {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -201,7 +215,8 @@ main > section {
   transition: var(--transition-theme);
 }
 
-main > section h2 {
+.left-col > section h2,
+.right-col > section h2 {
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 1rem;
@@ -215,13 +230,6 @@ main > section h2 {
   color: var(--color-text-muted);
   margin-bottom: 1rem;
 }
-
-/* Grid area assignments */
-#form-section        { grid-area: form; }
-#filter-section      { grid-area: filter; }
-#chart-section       { grid-area: chart; }
-#list-section        { grid-area: list; }
-#spending-limit-section { grid-area: limit; }
 
 /* ============================================================
    7. FORM SECTION
@@ -417,14 +425,18 @@ button[type="button"]:active {
 .chart-wrapper {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
+  width: 100%;
+  min-height: 340px;
 }
 
 #spending-chart {
-  max-width: 100%;
-  max-height: 280px;
+  max-width: 320px;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1;
 }
 
 .placeholder-text {
@@ -432,6 +444,14 @@ button[type="button"]:active {
   color: var(--color-text-muted);
   text-align: center;
   padding: 2rem 1rem;
+}
+
+#list-placeholder {
+  padding: 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ============================================================
@@ -442,11 +462,11 @@ button[type="button"]:active {
   flex-direction: column;
 }
 
-/* Scrollable transaction list — Req 2.4 */
+/* Scrollable transaction list — shows 1 item, rest scrollable */
 #transaction-list {
   list-style: none;
   overflow-y: auto;
-  max-height: 340px;
+  max-height: 72px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -567,7 +587,7 @@ button[type="button"]:active {
    13. SPENDING LIMIT SECTION
    ============================================================ */
 #spending-limit-section {
-  grid-column: 1 / -1;
+  align-self: start;
 }
 
 #spending-limit-inputs {
@@ -691,13 +711,7 @@ button[type="button"]:active {
    ============================================================ */
 @media (max-width: 700px) {
   main {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "form"
-      "filter"
-      "chart"
-      "list"
-      "limit";
+    flex-direction: column;
     padding: 1rem;
   }
 
@@ -710,10 +724,6 @@ button[type="button"]:active {
   .header-right {
     width: 100%;
     justify-content: space-between;
-  }
-
-  #transaction-list {
-    max-height: 260px;
   }
 
   #toast-container {

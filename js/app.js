@@ -555,7 +555,14 @@ function renderChart(txns) {
 
   // Hide placeholder, show canvas
   if (placeholderEl) placeholderEl.style.display = 'none';
-  canvas.style.display = '';
+  canvas.style.display = 'block';
+
+  // If chart was previously destroyed (canvas was hidden), we must create fresh.
+  // Destroy any stale instance that may have lost its context.
+  if (AppState.chartInstance && !AppState.chartInstance.ctx) {
+    AppState.chartInstance.destroy();
+    AppState.chartInstance = null;
+  }
 
   const totals = computeCategoryTotals(txns);
   const categories = Object.keys(totals);
@@ -602,6 +609,8 @@ function renderChart(txns) {
       data: chartData,
       options: {
         responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1,
         plugins: {
           legend: {
             position: 'bottom',
@@ -776,6 +785,11 @@ function renderSpendingLimitInputs() {
 function renderCategoryOptions() {
   const categorySelect = document.getElementById('input-category');
   if (!categorySelect) return;
+
+  // Ensure categories always has at least the defaults
+  if (!AppState.categories || AppState.categories.length === 0) {
+    AppState.categories = [...DEFAULT_CATEGORIES];
+  }
 
   // Remember current selection
   const previousValue = categorySelect.value;
